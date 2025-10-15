@@ -1,4 +1,5 @@
 import argparse
+import os
 from crewai import Crew, Process
 from agents import ArticleAnalysisAgents
 from tasks import ArticleAnalysisTasks
@@ -11,6 +12,12 @@ def main():
     # Initialize the agents and tasks
     agents = ArticleAnalysisAgents()
     tasks = ArticleAnalysisTasks()
+
+    # Inform the user which model is being used
+    if os.getenv("OPENROUTER_API_KEY"):
+        print("Using OpenRouter model: xai/grok-4-fast")
+    else:
+        print("Using Ollama model: gpt-oss:20b")
 
     # Create the agents
     summarizer_agent = agents.summarizer_agent()

@@ -1,12 +1,27 @@
 from crewai import Agent
 import os
+from dotenv import load_dotenv
+from langchain_community.llms import Ollama
+from langchain_openai import ChatOpenAI
+
+load_dotenv()
 
 class ArticleAnalysisAgents:
     def __init__(self):
-        # In a real-world scenario, you would load the LLM configuration from a
-        # configuration file or environment variables.
-        # For this example, we'll use placeholders.
-        self.llm = None  # Replace with your LLM configuration
+        self.llm = self.load_llm()
+
+    def load_llm(self):
+        # Check for OpenRouter API key
+        if os.getenv("OPENROUTER_API_KEY"):
+            return ChatOpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=os.getenv("OPENROUTER_API_KEY"),
+                model_name="xai/grok-4-fast",
+                temperature=0.7,
+            )
+        else:
+            # Default to Ollama
+            return Ollama(model="gpt-oss:20b")
 
     def summarizer_agent(self):
         return Agent(
