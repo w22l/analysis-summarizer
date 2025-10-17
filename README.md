@@ -1,84 +1,109 @@
 # Article Analysis and Summarization Agent
 
-This project contains an AI agent designed to analyze articles and generate summaries of key points, identify underlying assumptions, and list potential errors or biases. The agent is built using the CrewAI framework and can be configured to use either a local `gpt-oss:20b` model via Ollama or the `xai-grok-4-fast` model via OpenRouter.
+An AI-powered toolkit that ingests long-form articles, surfaces executive summaries, interrogates underlying assumptions, and flags potential errors or biases. The project is designed with GitHub Spec Kit artifacts to ensure clear constitution, specification, planning, and task breakdown prior to execution.
 
-## Features
-
-- **Summarization:** Extracts and condenses the key points from an article.
-- **Assumption Identification:** Uncovers the underlying assumptions made by the author.
-- **Error and Bias Detection:** Identifies potential factual errors, logical fallacies, and biases in the text.
-- **Markdown Output:** Generates a well-structured markdown report of the analysis.
-- **Flexible Model Selection:** Supports both local and remote large language models.
+## Highlights
+- **Spec-Driven Design:** See `spec/` for the constitution, implementation plan, and task definitions produced with GitHub Spec Kit principles.
+- **CrewAI Orchestration:** Specialized agents collaborate sequentially to cover summarization, assumption analysis, and error detection.
+- **Modern CLI Experience:** Typer + Rich interface with commands for running analyses, inspecting configuration, viewing history, and auditing the article cache.
+- **Flexible LLM Backends:** Choose between `xai/grok-4-fast` via OpenRouter or local `gpt-oss:20b` via Ollama.
+- **Persistent Storage:** SQLite ledger caches article content and tracks generated reports.
+- **Markdown Deliverables:** Reports are saved to disk (default `output/`) and rendered in-terminal for quick review.
 
 ## Tech Stack
+- **Python 3.8+**
+- **CrewAI**
+- **LangChain (OpenAI + Ollama integrations)**
+- **Typer / Rich**
+- **SQLite (standard library `sqlite3`)**
+- **Requests + BeautifulSoup4 for article acquisition**
+- **GitHub Spec Kit documentation (`spec/` directory)**
 
-- **CrewAI:** A framework for orchestrating autonomous AI agents.
-- **Large Language Models (LLMs):**
-  - `gpt-oss:20b` via Ollama (local)
-  - `xai-grok-4-fast` via OpenRouter (remote)
-- **Python:** The core programming language.
+## Setup
 
-## Getting Started
-
-### Prerequisites
-
-- Python 3.8+
-- Pip for package management
-- Ollama (if using the local `gpt-oss:20b` model)
-- An OpenRouter account and API key (if using the `xai-grok-4-fast` model)
-
-### Installation
-
-1. **Clone the repository:**
+1. **Clone and install dependencies**
    ```bash
    git clone https://github.com/w22l/analysis-summarizer.git
    cd analysis-summarizer
-   ```
-
-2. **Install the required Python packages:**
-   ```bash
    pip install -r requirements.txt
    ```
 
-3. **Set up your environment variables:**
-   - Create a `.env` file in the root of the project.
-   - If using OpenRouter, add the following line:
-     ```
-     OPENROUTER_API_KEY="your_openrouter_api_key"
-     ```
+2. **Configure the environment**
+   Create a `.env` file (sample values shown below):
+   ```
+   OPENROUTER_API_KEY="your_openrouter_api_key"  # required when MODEL_PROVIDER=openrouter
+   MODEL_PROVIDER="openrouter"                   # options: openrouter, ollama
+   OPENROUTER_MODEL="xai/grok-4-fast"
+   OLLAMA_MODEL="gpt-oss:20b"
+   OUTPUT_DIR="output"
+   DATABASE_PATH="data/analysis.db"
+   ```
 
-### Running the Agent
+   - Install [Ollama](https://ollama.ai/) and pull `gpt-oss:20b` if using the local model.
+   - Obtain an [OpenRouter](https://openrouter.ai/) API key for hosted model access.
 
-To run the agent, you will need to provide the URL of the article you want to analyze.
+3. **Verify the spec**
+   Review `spec/constitution.md`, `spec/spec.md`, `spec/plan.md`, and `spec/tasks.md` to understand the design intent that guides the implementation.
 
+## CLI Usage
+
+All commands are executed through the Typer CLI housed in `main.py`.
+
+### Analyze an article
 ```bash
-python main.py --url "https://example.com/article"
+python main.py analyze "https://example.com/article" --output ./output --model openrouter
+```
+- Downloads (or reuses cached) article content.
+- Runs the CrewAI workflow.
+- Writes a markdown report to the chosen output directory.
+
+### Inspect configuration
+```bash
+python main.py show-config
 ```
 
-The agent will process the article and generate a markdown file in the `output` directory containing the analysis.
+### Review analysis history
+```bash
+python main.py history --limit 5
+```
 
-## Project Structure
+### List cached articles
+```bash
+python main.py cache --limit 5
+```
 
+Use `--help` on any command for additional options.
+
+## Generated Reports
+
+- Saved as markdown files in the configured `OUTPUT_DIR`.
+- File names include a timestamp and slugified article title or URL.
+- Each report contains metadata, executive summary bullets, authorial assumptions, and a table of potential errors/biases.
+- The associated metadata is recorded in SQLite for later retrieval.
+
+## Project Layout
 ```
 .
-├── README.md
+├── agents.py
+├── article_service.py
+├── config.py
 ├── main.py
 ├── requirements.txt
-├── agents.py
+├── spec/
+│   ├── constitution.md
+│   ├── plan.md
+│   ├── spec.md
+│   └── tasks.md
+├── storage.py
 ├── tasks.py
-└── output/
+├── output/
+└── data/            # created at runtime for the SQLite database
 ```
-
-- `main.py`: The main entry point for the application.
-- `requirements.txt`: A list of the Python packages required for the project.
-- `agents.py`: Defines the different AI agents used in the analysis process.
-- `tasks.py`: Defines the tasks that the agents will perform.
-- `output/`: The directory where the generated markdown files are saved.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue if you have any suggestions or find any bugs.
+Pull requests and feedback are welcome. Please align changes with the existing spec kit documentation or update the spec accordingly.
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+This project is licensed under the MIT License. See `LICENSE` for details.

@@ -1,27 +1,33 @@
 from crewai import Agent
-import os
-from dotenv import load_dotenv
 from langchain_community.llms import Ollama
 from langchain_openai import ChatOpenAI
 
-load_dotenv()
+from config import Settings
+
 
 class ArticleAnalysisAgents:
-    def __init__(self):
-        self.llm = self.load_llm()
+    def __init__(self, settings: Settings):
+        self.settings = settings
+        self.llm = self._load_llm()
 
-    def load_llm(self):
-        # Check for OpenRouter API key
-        if os.getenv("OPENROUTER_API_KEY"):
+    def _load_llm(self):
+        provider = self.settings.model_provider
+        if provider == "openrouter":
+            if not self.settings.openrouter_api_key:
+                raise ValueError(
+                    "OpenRouter selected but OPENROUTER_API_KEY is not configured."
+                )
             return ChatOpenAI(
                 base_url="https://openrouter.ai/api/v1",
-                api_key=os.getenv("OPENROUTER_API_KEY"),
-                model_name="xai/grok-4-fast",
-                temperature=0.7,
+                api_key=self.settings.openrouter_api_key,
+                model=self.settings.openrouter_model,
+                temperature=0.3,
             )
-        else:
-            # Default to Ollama
-            return Ollama(model="gpt-oss:20b")
+
+        if provider == "ollama":
+            return Ollama(model=self.settings.ollama_model)
+
+        raise ValueError(f"Unsupported model provider '{provider}'.")
 
     def summarizer_agent(self):
         return Agent(
